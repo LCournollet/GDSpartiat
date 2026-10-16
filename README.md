@@ -1,41 +1,41 @@
 # GDSpartiat
 
-Editeur de sauvegarde pour Geometry Dash (version PC Windows).
+Save editor for Geometry Dash (Windows PC version).
 
-Il decode `CCGameManager.dat`, affiche les valeurs et permet de les modifier puis de re-encoder le fichier.
+It decodes `CCGameManager.dat`, shows its values, lets you edit them and encodes the file back.
 
-## Utilisation
+## Usage
 
-1. Telecharger `GDSpartiat.exe` dans la page [Releases](https://github.com/LCournollet/GDSpartiat/releases).
-2. Fermer Geometry Dash (sinon le jeu ecrase le fichier en quittant).
-3. Lancer l'exe. Le fichier `%LOCALAPPDATA%\GeometryDash\CCGameManager.dat` est ouvert automatiquement.
-4. Modifier les valeurs puis cliquer sur "Enregistrer" (ou `Ctrl+S`).
+1. Download `GDSpartiat.exe` from the [Releases](https://github.com/LCournollet/GDSpartiat/releases) page.
+2. Close Geometry Dash (otherwise the game overwrites the file when it exits).
+3. Run the exe. `%LOCALAPPDATA%\GeometryDash\CCGameManager.dat` is opened automatically.
+4. Edit the values, then click "Save" (or press `Ctrl+S`).
 
-L'appli refuse d'enregistrer tant que Geometry Dash est ouvert, et previent si on quitte sans avoir enregistre.
+The app refuses to save while Geometry Dash is running, and warns you if you quit with unsaved changes.
 
-A chaque enregistrement, l'ancien fichier est copie en `CCGameManager.dat.bak`. Il peut etre remis en place via `Fichier > Restaurer la sauvegarde .bak`.
+Every time you save, the previous file is copied to `CCGameManager.dat.bak`. You can put it back with `File > Restore .bak backup`.
 
-## Onglets
+## Tabs
 
-- **Statistiques** : etoiles, lunes, diamants, orbes, cles demon, coins, shards, etc. "Orbes (boutique)" correspond aux orbes depensables, "Orbes (total)" au compteur affiche dans les stats du jeu.
-- **Joueur** : pseudo, icones, couleurs.
-- **Toutes les stats (GS_value)** : toutes les cles de stats, y compris celles non listees.
-- **Reglages et divers** : les autres valeurs simples du fichier.
+- **Stats**: stars, moons, diamonds, orbs, demon keys, coins, shards, etc. "Orbs (shop)" are the orbs you can spend, "Orbs (total)" is the counter shown in the in-game stats.
+- **Player**: username, icons, colors.
+- **All stats (GS_value)**: every stat key, including the ones not listed above.
+- **Settings and misc**: the other simple values in the file.
 
-Le menu Fichier permet aussi d'exporter la sauvegarde decodee en XML et de reimporter un XML modifie a la main.
+The File menu can also export the decoded save to XML and import an XML file edited by hand.
 
-## Remarques
+## Notes
 
-- Modifier ses stats puis synchroniser son compte peut entrainer un ban du classement.
-- Les fichiers de la version Mac (chiffres en AES) ne sont pas pris en charge.
+- Editing your stats and then syncing your account can get you banned from the leaderboards.
+- Mac save files (AES encrypted) are not supported.
 
-## Lancer depuis les sources
+## Running from source
 
 ```
 python app.py
 ```
 
-Construire l'exe :
+Building the exe:
 
 ```
 pip install pyinstaller

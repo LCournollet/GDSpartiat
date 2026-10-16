@@ -8,57 +8,57 @@ import theme
 
 APP_NAME = "GDSpartiat"
 
-# Cles de GS_value (statistiques du joueur), rangees par groupe.
-# Chaque champ : (cle, libelle, symbole, couleur)
+# GS_value keys (player stats), grouped.
+# Each field: (key, label, symbol, color)
 STATS = [
-    ("Collectables", [
-        ("6", "Etoiles", "★", "#ffd21f"),
-        ("28", "Lunes", "☾", "#c8e6ff"),
-        ("13", "Diamants", "◆", "#5ff2ff"),
-        ("29", "Diamants (total)", "◆", "#5ff2ff"),
-        ("14", "Orbes (boutique)", "●", "#4fe0ff"),
-        ("22", "Orbes (total)", "●", "#4fe0ff"),
-        ("21", "Cles demon", "✦", "#ff9a3c"),
+    ("Collectibles", [
+        ("6", "Stars", "★", "#ffd21f"),
+        ("28", "Moons", "☾", "#c8e6ff"),
+        ("13", "Diamonds", "◆", "#5ff2ff"),
+        ("29", "Diamonds (total)", "◆", "#5ff2ff"),
+        ("14", "Orbs (shop)", "●", "#4fe0ff"),
+        ("22", "Orbs (total)", "●", "#4fe0ff"),
+        ("21", "Demon keys", "✦", "#ff9a3c"),
         ("8", "Secret coins", "◉", "#ffd21f"),
         ("12", "User coins", "◉", "#d9d9d9"),
     ]),
     ("Progression", [
         ("5", "Demons", "☠", "#ff4d4d"),
-        ("3", "Niveaux officiels", "■", "#5ee03a"),
-        ("4", "Niveaux en ligne", "■", "#5ee03a"),
+        ("3", "Official levels", "■", "#5ee03a"),
+        ("4", "Online levels", "■", "#5ee03a"),
         ("15", "Dailies", "▲", "#ffd21f"),
         ("40", "Gauntlets", "▲", "#ff9a3c"),
         ("7", "Map packs", "■", "#c58bff"),
     ]),
-    ("Activite", [
-        ("1", "Sauts", "▲", "#ffffff"),
-        ("2", "Tentatives", "↻", "#ffffff"),
-        ("9", "Joueurs detruits", "✖", "#ff4d4d"),
-        ("10", "Niveaux likes", "♥", "#ff6fb0"),
-        ("11", "Niveaux notes", "★", "#ffffff"),
+    ("Activity", [
+        ("1", "Jumps", "▲", "#ffffff"),
+        ("2", "Attempts", "↻", "#ffffff"),
+        ("9", "Players destroyed", "✖", "#ff4d4d"),
+        ("10", "Liked levels", "♥", "#ff6fb0"),
+        ("11", "Rated levels", "★", "#ffffff"),
     ]),
     ("Shards", [
-        ("16", "Feu", "◆", "#ff6a2a"),
-        ("17", "Glace", "◆", "#8ee8ff"),
+        ("16", "Fire", "◆", "#ff6a2a"),
+        ("17", "Ice", "◆", "#8ee8ff"),
         ("18", "Poison", "◆", "#7dff4a"),
-        ("19", "Ombre", "◆", "#a070ff"),
-        ("20", "Lave", "◆", "#ff3a2a"),
-        ("23", "Terre", "◆", "#c08a4a"),
-        ("24", "Sang", "◆", "#c0102a"),
+        ("19", "Shadow", "◆", "#a070ff"),
+        ("20", "Lava", "◆", "#ff3a2a"),
+        ("23", "Earth", "◆", "#c08a4a"),
+        ("24", "Blood", "◆", "#c0102a"),
         ("25", "Metal", "◆", "#c8c8c8"),
-        ("26", "Lumiere", "◆", "#fff6a0"),
-        ("27", "Ame", "◆", "#ff8ad8"),
+        ("26", "Light", "◆", "#fff6a0"),
+        ("27", "Soul", "◆", "#ff8ad8"),
     ]),
 ]
 
 PLAYER = [
-    ("Profil", [
-        ("playerName", "Pseudo", "☺", "#ffd21f"),
+    ("Profile", [
+        ("playerName", "Username", "☺", "#ffd21f"),
     ]),
-    ("Icones", [
+    ("Icons", [
         ("playerFrame", "Cube", "■", "#5ee03a"),
-        ("playerShip", "Vaisseau", "▶", "#5ee03a"),
-        ("playerBall", "Boule", "●", "#5ee03a"),
+        ("playerShip", "Ship", "▶", "#5ee03a"),
+        ("playerBall", "Ball", "●", "#5ee03a"),
         ("playerBird", "UFO", "◒", "#5ee03a"),
         ("playerDart", "Wave", "▸", "#5ee03a"),
         ("playerRobot", "Robot", "▣", "#5ee03a"),
@@ -66,19 +66,19 @@ PLAYER = [
         ("playerSwing", "Swing", "◈", "#5ee03a"),
         ("playerJetpack", "Jetpack", "▲", "#5ee03a"),
     ]),
-    ("Couleurs et effets", [
-        ("playerColor", "Couleur 1", "■", "#ffd21f"),
-        ("playerColor2", "Couleur 2", "■", "#4fe0ff"),
-        ("playerColor3", "Couleur glow", "■", "#ffffff"),
-        ("playerStreak", "Trainee", "━", "#ffffff"),
-        ("playerShipStreak", "Trainee vaisseau", "━", "#ffffff"),
-        ("playerDeathEffect", "Effet de mort", "✸", "#ff4d4d"),
+    ("Colors and effects", [
+        ("playerColor", "Color 1", "■", "#ffd21f"),
+        ("playerColor2", "Color 2", "■", "#4fe0ff"),
+        ("playerColor3", "Glow color", "■", "#ffffff"),
+        ("playerStreak", "Trail", "━", "#ffffff"),
+        ("playerShipStreak", "Ship trail", "━", "#ffffff"),
+        ("playerDeathEffect", "Death effect", "✸", "#ff4d4d"),
     ]),
 ]
 
 
 class FieldGrid(ttk.Frame):
-    """Champs libelle / valeur ranges en blocs, lies a une liste de cles."""
+    """Label / value fields arranged in boxes, bound to a list of keys."""
 
     def __init__(self, master, groups, columns=2):
         super().__init__(master, padding=12)
@@ -122,13 +122,13 @@ class FieldGrid(ttk.Frame):
                 try:
                     int(value)
                 except ValueError:
-                    raise ValueError(f"{label} : '{value}' n'est pas un nombre entier")
+                    raise ValueError(f"{label} : '{value}' is not a whole number")
             if value != old:
                 pdict.set(key, value)
 
 
 class KeyTable(ttk.Frame):
-    """Tableau editable de toutes les valeurs simples d'un dictionnaire."""
+    """Editable table of every simple value in a dictionary."""
 
     def __init__(self, master, on_change=None, before_change=None):
         super().__init__(master, padding=10)
@@ -137,17 +137,17 @@ class KeyTable(ttk.Frame):
         self.before_change = before_change or (lambda: True)
         bar = ttk.Frame(self)
         bar.pack(fill="x", pady=(0, 6))
-        ttk.Label(bar, text="Filtre :").pack(side="left")
+        ttk.Label(bar, text="Filter:").pack(side="left")
         self.filter_var = tk.StringVar()
         self.filter_var.trace_add("write", lambda *_: self.refresh())
         ttk.Entry(bar, textvariable=self.filter_var, width=30).pack(side="left", padx=6)
-        ttk.Button(bar, text="Ajouter une cle", command=self.add_key).pack(side="right")
-        ttk.Label(bar, text="Double-clic pour modifier").pack(side="right", padx=10)
+        ttk.Button(bar, text="Add key", command=self.add_key).pack(side="right")
+        ttk.Label(bar, text="Double-click to edit").pack(side="right", padx=10)
 
         self.tree = ttk.Treeview(self, columns=("key", "type", "value"), show="headings")
-        self.tree.heading("key", text="Cle")
+        self.tree.heading("key", text="Key")
         self.tree.heading("type", text="Type")
-        self.tree.heading("value", text="Valeur")
+        self.tree.heading("value", text="Value")
         self.tree.column("key", width=200)
         self.tree.column("type", width=50, anchor="center")
         self.tree.column("value", width=450)
@@ -183,9 +183,9 @@ class KeyTable(ttk.Frame):
         key = sel[0]
         elem = self.pdict.raw(key)
         if elem.tag == "t":
-            messagebox.showinfo(APP_NAME, "Valeur booleenne, rien a modifier.")
+            messagebox.showinfo(APP_NAME, "Boolean value, nothing to edit.")
             return
-        value = simpledialog.askstring(APP_NAME, f"Nouvelle valeur pour {key} :", initialvalue=elem.text or "", parent=self)
+        value = simpledialog.askstring(APP_NAME, f"New value for {key}:", initialvalue=elem.text or "", parent=self)
         if value is not None and self.before_change():
             self.pdict.set(key, value)
             self.refresh()
@@ -194,10 +194,10 @@ class KeyTable(ttk.Frame):
     def add_key(self):
         if self.pdict is None:
             return
-        key = simpledialog.askstring(APP_NAME, "Nom de la cle :", parent=self)
+        key = simpledialog.askstring(APP_NAME, "Key name:", parent=self)
         if not key:
             return
-        value = simpledialog.askstring(APP_NAME, f"Valeur pour {key} :", parent=self)
+        value = simpledialog.askstring(APP_NAME, f"Value for {key}:", parent=self)
         if value is None or not self.before_change():
             return
         self.pdict.set(key, value)
@@ -229,30 +229,30 @@ class App(tk.Tk):
 
         menu = tk.Menu(self)
         fmenu = tk.Menu(menu, tearoff=0)
-        fmenu.add_command(label="Ouvrir CCGameManager.dat", command=self.open_default)
-        fmenu.add_command(label="Ouvrir un fichier...", command=self.open_other)
+        fmenu.add_command(label="Open CCGameManager.dat", command=self.open_default)
+        fmenu.add_command(label="Open file...", command=self.open_other)
         fmenu.add_separator()
-        fmenu.add_command(label="Enregistrer", command=self.save_file, accelerator="Ctrl+S")
-        fmenu.add_command(label="Enregistrer sous...", command=self.save_as)
+        fmenu.add_command(label="Save", command=self.save_file, accelerator="Ctrl+S")
+        fmenu.add_command(label="Save as...", command=self.save_as)
         fmenu.add_separator()
-        fmenu.add_command(label="Exporter en XML...", command=self.export_xml)
-        fmenu.add_command(label="Importer un XML...", command=self.import_xml)
+        fmenu.add_command(label="Export to XML...", command=self.export_xml)
+        fmenu.add_command(label="Import XML...", command=self.import_xml)
         fmenu.add_separator()
-        fmenu.add_command(label="Restaurer la sauvegarde .bak", command=self.restore_backup)
+        fmenu.add_command(label="Restore .bak backup", command=self.restore_backup)
         fmenu.add_separator()
-        fmenu.add_command(label="Quitter", command=self.on_close)
-        menu.add_cascade(label="Fichier", menu=fmenu)
+        fmenu.add_command(label="Quit", command=self.on_close)
+        menu.add_cascade(label="File", menu=fmenu)
         self.config(menu=menu)
         self.bind("<Control-s>", lambda _e: self.save_file())
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        theme.Header(self, APP_NAME, "Editeur de sauvegarde Geometry Dash").pack(side="top", fill="x")
+        theme.Header(self, APP_NAME, "Geometry Dash save editor").pack(side="top", fill="x")
 
         bottom = ttk.Frame(self, padding=(12, 8), style="Bg.TFrame")
         bottom.pack(side="bottom", fill="x")
-        ttk.Button(bottom, text="Enregistrer", style="Save.TButton", command=self.save_file).pack(side="right")
-        ttk.Button(bottom, text="Annuler les modifs", command=self.reload).pack(side="right", padx=6)
-        self.status = tk.StringVar(value="Aucun fichier ouvert")
+        ttk.Button(bottom, text="Save", style="Save.TButton", command=self.save_file).pack(side="right")
+        ttk.Button(bottom, text="Discard changes", command=self.reload).pack(side="right", padx=6)
+        self.status = tk.StringVar(value="No file open")
         ttk.Label(bottom, textvariable=self.status, anchor="w", style="Bg.TLabel").pack(side="left", fill="x", expand=True)
 
         self.tabs = ttk.Notebook(self)
@@ -260,27 +260,27 @@ class App(tk.Tk):
         self.tabs.bind("<<NotebookTabChanged>>", lambda _e: self.sync_fields())
 
         self.stats = FieldGrid(self.tabs, STATS, columns=2)
-        self.tabs.add(self.stats, text="Statistiques")
+        self.tabs.add(self.stats, text="Stats")
 
         self.player = FieldGrid(self.tabs, PLAYER, columns=3)
-        self.tabs.add(self.player, text="Joueur")
+        self.tabs.add(self.player, text="Player")
 
         self.values_table = KeyTable(self.tabs, on_change=self.on_table_change, before_change=self.sync_fields)
-        self.tabs.add(self.values_table, text="Toutes les stats (GS_value)")
+        self.tabs.add(self.values_table, text="All stats (GS_value)")
 
         self.root_table = KeyTable(self.tabs, on_change=self.on_table_change, before_change=self.sync_fields)
-        self.tabs.add(self.root_table, text="Reglages et divers")
+        self.tabs.add(self.root_table, text="Settings and misc")
 
         if autoload:
             self.after(100, self.open_default)
 
-    # Fichiers
+    # Files
 
     def load(self, path):
         try:
             self.save = gdsave.SaveFile(path)
         except Exception as e:
-            messagebox.showerror(APP_NAME, f"Impossible de lire {path}\n\n{e}")
+            messagebox.showerror(APP_NAME, f"Could not read {path}\n\n{e}")
             return
         self.dirty = False
         self.refresh_all()
@@ -314,19 +314,19 @@ class App(tk.Tk):
     def open_other(self):
         path = filedialog.askopenfilename(
             initialdir=gdsave.default_save_dir(),
-            filetypes=[("Sauvegarde GD", "*.dat"), ("Tous les fichiers", "*.*")],
+            filetypes=[("GD save", "*.dat"), ("All files", "*.*")],
         )
         if path:
             self.load(path)
 
     def check_open(self):
         if self.save is None:
-            messagebox.showwarning(APP_NAME, "Aucun fichier ouvert.")
+            messagebox.showwarning(APP_NAME, "No file open.")
             return False
         return True
 
     def sync_fields(self):
-        """Reporte le contenu des champs dans la sauvegarde en memoire."""
+        """Copy the field values into the save held in memory."""
         if self.save is None:
             return True
         data = self.save.data
@@ -351,26 +351,26 @@ class App(tk.Tk):
         if gd_is_running():
             messagebox.showwarning(
                 APP_NAME,
-                "Geometry Dash est ouvert, il ecrasera la sauvegarde en quittant.\n\n"
-                "Ferme le jeu puis enregistre a nouveau.",
+                "Geometry Dash is running and will overwrite the save when it closes.\n\n"
+                "Close the game, then save again.",
             )
             return False
         target = path or self.save.path
         try:
             self.save.save(path)
             if gdsave.SaveFile(target).to_xml() != self.save.to_xml():
-                raise IOError("le fichier relu ne correspond pas")
+                raise IOError("the file read back does not match")
         except Exception as e:
-            messagebox.showerror(APP_NAME, f"Erreur a l'enregistrement\n\n{e}")
+            messagebox.showerror(APP_NAME, f"Save failed\n\n{e}")
             return False
         self.dirty = False
-        self.status.set(f"Enregistre et verifie : {target} (ancien fichier copie en .bak)")
+        self.status.set(f"Saved and verified: {target} (previous file copied to .bak)")
         return True
 
     def save_as(self):
         if not self.check_open():
             return
-        path = filedialog.asksaveasfilename(defaultextension=".dat", filetypes=[("Sauvegarde GD", "*.dat")])
+        path = filedialog.asksaveasfilename(defaultextension=".dat", filetypes=[("GD save", "*.dat")])
         if path:
             self.save_file(path)
 
@@ -381,32 +381,32 @@ class App(tk.Tk):
         if path:
             with open(path, "wb") as f:
                 f.write(self.save.to_xml())
-            self.status.set(f"XML exporte : {path}")
+            self.status.set(f"XML exported: {path}")
 
     def import_xml(self):
         if not self.check_open():
             return
-        path = filedialog.askopenfilename(filetypes=[("XML", "*.xml"), ("Tous les fichiers", "*.*")])
+        path = filedialog.askopenfilename(filetypes=[("XML", "*.xml"), ("All files", "*.*")])
         if not path:
             return
         try:
             with open(path, "rb") as f:
                 self.save.set_xml(f.read())
         except Exception as e:
-            messagebox.showerror(APP_NAME, f"XML invalide\n\n{e}")
+            messagebox.showerror(APP_NAME, f"Invalid XML\n\n{e}")
             return
         self.dirty = True
         self.refresh_all()
-        self.status.set(f"XML importe depuis {path} (pas encore enregistre)")
+        self.status.set(f"XML imported from {path} (not saved yet)")
 
     def restore_backup(self):
         if not self.check_open():
             return
         backup = self.save.path + ".bak"
         if not os.path.exists(backup):
-            messagebox.showinfo(APP_NAME, "Aucun fichier .bak trouve.")
+            messagebox.showinfo(APP_NAME, "No .bak file found.")
             return
-        if messagebox.askyesno(APP_NAME, f"Remplacer le fichier actuel par\n{backup} ?"):
+        if messagebox.askyesno(APP_NAME, f"Replace the current file with\n{backup}?"):
             with open(backup, "rb") as src, open(self.save.path, "wb") as dst:
                 dst.write(src.read())
             self.load(self.save.path)
@@ -414,11 +414,11 @@ class App(tk.Tk):
     def on_table_change(self):
         self.dirty = True
         self.refresh_all()
-        self.status.set("Modifie (pas encore enregistre)")
+        self.status.set("Modified (not saved yet)")
 
     def on_close(self):
         if self.has_changes():
-            answer = messagebox.askyesnocancel(APP_NAME, "Des modifications ne sont pas enregistrees.\n\nEnregistrer avant de quitter ?")
+            answer = messagebox.askyesnocancel(APP_NAME, "You have unsaved changes.\n\nSave before quitting?")
             if answer is None:
                 return
             if answer and not self.save_file():

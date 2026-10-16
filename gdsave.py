@@ -1,6 +1,6 @@
-"""Lecture et ecriture des fichiers de sauvegarde Geometry Dash (version Windows).
+"""Read and write Geometry Dash save files (Windows version).
 
-Format : XOR 11 -> base64 urlsafe -> gzip -> plist XML maison de RobTop.
+Format: XOR 11 -> urlsafe base64 -> gzip -> RobTop's own plist XML.
 """
 
 import base64
@@ -44,7 +44,7 @@ def write_xml(path, xml):
 
 
 class PlistDict:
-    """Vue sur un element <d> : les cles <k> sont suivies de leur valeur."""
+    """View over a <d> element: each <k> key is followed by its value."""
 
     def __init__(self, elem):
         self.elem = elem

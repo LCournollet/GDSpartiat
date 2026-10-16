@@ -1,4 +1,4 @@
-"""Theme inspire des menus de Geometry Dash."""
+"""Theme based on the Geometry Dash menus."""
 
 import tkinter as tk
 from tkinter import font as tkfont, ttk
@@ -81,7 +81,7 @@ def _mix(c1, c2, t):
 
 
 class Header(tk.Canvas):
-    """Bandeau degrade avec titre jaune contoure de noir."""
+    """Gradient banner with a yellow title outlined in black."""
 
     def __init__(self, master, title, subtitle=""):
         super().__init__(master, height=78, highlightthickness=0, bg=BG)
@@ -103,7 +103,7 @@ class Header(tk.Canvas):
         w, h = self.winfo_width(), self.winfo_height()
         for y in range(h):
             self.create_line(0, y, w, y, fill=_mix(GRAD_TOP, GRAD_BOTTOM, y / max(h - 1, 1)))
-        # petits carres en fond, comme les decors du menu
+        # small squares in the background, like the menu decorations
         for i, x in enumerate(range(w - 260, w, 52)):
             s = 30 if i % 2 else 22
             yy = 16 if i % 2 else 34
