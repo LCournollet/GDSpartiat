@@ -121,3 +121,87 @@ class SaveFile:
             with open(path, "rb") as src, open(backup, "wb") as dst:
                 dst.write(src.read())
         write_xml(path, self.to_xml())
+
+
+# Reward types used in chests (GJRewardObject key 1)
+REWARD_TYPES = {
+    1: "Fire shards",
+    2: "Ice shards",
+    3: "Poison shards",
+    4: "Shadow shards",
+    5: "Lava shards",
+    6: "Demon keys",
+    7: "Orbs",
+    8: "Diamonds",
+    10: "Earth shards",
+    11: "Blood shards",
+    12: "Metal shards",
+    13: "Light shards",
+    14: "Soul shards",
+    15: "Gold keys",
+}
+
+
+def _int_node(parent, key, value):
+    k = ET.SubElement(parent, "k")
+    k.text = key
+    v = ET.SubElement(parent, "i")
+    v.text = str(value)
+
+
+def add_chest(save, rewards):
+    """Add an opened timed chest holding the given rewards {type: amount}.
+
+    In 2.2 the game rebuilds orbs, diamonds, shards and keys from opened
+    chests at launch, so this is the way to change them.
+    """
+    rewards = {t: int(a) for t, a in rewards.items() if int(a) > 0}
+    if not rewards:
+        return None
+    chests = save.data.ensure_dict("GS_11")
+    ids = [int(k[2:]) for k in chests.keys() if k.startswith("1_") and k[2:].isdigit()]
+    chest_id = max(ids, default=0) + 1
+    key = f"1_{chest_id}"
+
+    k = ET.SubElement(chests.elem, "k")
+    k.text = key
+    chest = ET.SubElement(chests.elem, "d")
+    _int_node(chest, "kCEK", 8)
+    _int_node(chest, "1", chest_id)
+    _int_node(chest, "2", 1)
+    k = ET.SubElement(chest, "k")
+    k.text = "3"
+    items = ET.SubElement(chest, "d")
+    k = ET.SubElement(items, "k")
+    k.text = "_isArr"
+    ET.SubElement(items, "t")
+    for n, (rtype, amount) in enumerate(sorted(rewards.items())):
+        k = ET.SubElement(items, "k")
+        k.text = f"k_{n}"
+        item = ET.SubElement(items, "d")
+        _int_node(item, "kCEK", 9)
+        _int_node(item, "1", rtype)
+        _int_node(item, "3", amount)
+    return key
+
+
+def chest_totals(save):
+    """Sum of every chest reward in the save, by reward type."""
+    totals = {}
+
+    def walk(elem):
+        kids = list(elem)
+        pairs = {kids[i].text: kids[i + 1] for i in range(0, len(kids) - 1, 2) if kids[i].tag == "k"}
+        if pairs.get("kCEK") is not None and pairs["kCEK"].text == "9":
+            t, a = pairs.get("1"), pairs.get("3")
+            if t is not None and a is not None:
+                totals[int(t.text)] = totals.get(int(t.text), 0) + int(a.text)
+        for child in elem:
+            if child.tag == "d":
+                walk(child)
+
+    for key in save.data.keys():
+        elem = save.data.raw(key)
+        if key.startswith("GS_") and elem.tag == "d":
+            walk(elem)
+    return totals

@@ -17,7 +17,8 @@ Every time you save, the previous file is copied to `CCGameManager.dat.bak`. You
 
 ## Tabs
 
-- **Stats**: stars, moons, diamonds, orbs, demon keys, coins, shards, etc. "Orbs (shop)" are the orbs you can spend, "Orbs (total)" is the counter shown in the in-game stats.
+- **Stats**: stars, moons, coins, demons, levels, jumps, attempts, etc. Orbs, diamonds, keys and shards are shown greyed out: the game recalculates them, so they cannot be edited here.
+- **Rewards**: adds an extra opened chest with the amount of orbs, diamonds, keys or shards you want. Since 2.2, Geometry Dash rebuilds these values from the chests you have opened every time it starts, so this is the only way to change them.
 - **Player**: username, icons, colors.
 - **All stats (GS_value)**: every stat key, including the ones not listed above.
 - **Settings and misc**: the other simple values in the file.

@@ -39,10 +39,10 @@ STATS = [
         ("11", "Rated levels", "★", "#ffffff"),
     ]),
     ("Shards", [
-        ("16", "Fire", "◆", "#ff6a2a"),
-        ("17", "Ice", "◆", "#8ee8ff"),
-        ("18", "Poison", "◆", "#7dff4a"),
-        ("19", "Shadow", "◆", "#a070ff"),
+        ("18", "Fire", "◆", "#ff6a2a"),
+        ("19", "Ice", "◆", "#8ee8ff"),
+        ("17", "Poison", "◆", "#7dff4a"),
+        ("16", "Shadow", "◆", "#a070ff"),
         ("20", "Lava", "◆", "#ff3a2a"),
         ("23", "Earth", "◆", "#c08a4a"),
         ("24", "Blood", "◆", "#c0102a"),
@@ -50,6 +50,27 @@ STATS = [
         ("26", "Light", "◆", "#fff6a0"),
         ("27", "Soul", "◆", "#ff8ad8"),
     ]),
+]
+
+# Rebuilt by the game from opened chests at launch, so editing them has no effect
+COMPUTED = {"13", "14", "21", "22", "29", "16", "17", "18", "19", "20", "23", "24", "25", "26", "27"}
+
+# Reward types for the Rewards tab: (type, label, symbol, color)
+REWARDS = [
+    (7, "Orbs", "●", "#4fe0ff"),
+    (8, "Diamonds", "◆", "#5ff2ff"),
+    (6, "Demon keys", "✦", "#ff9a3c"),
+    (15, "Gold keys", "✦", "#ffd21f"),
+    (1, "Fire shards", "◆", "#ff6a2a"),
+    (2, "Ice shards", "◆", "#8ee8ff"),
+    (3, "Poison shards", "◆", "#7dff4a"),
+    (4, "Shadow shards", "◆", "#a070ff"),
+    (5, "Lava shards", "◆", "#ff3a2a"),
+    (10, "Earth shards", "◆", "#c08a4a"),
+    (11, "Blood shards", "◆", "#c0102a"),
+    (12, "Metal shards", "◆", "#c8c8c8"),
+    (13, "Light shards", "◆", "#fff6a0"),
+    (14, "Soul shards", "◆", "#ff8ad8"),
 ]
 
 PLAYER = [
@@ -81,7 +102,7 @@ PLAYER = [
 class FieldGrid(ttk.Frame):
     """Label / value fields arranged in boxes, bound to a list of keys."""
 
-    def __init__(self, master, groups, columns=2):
+    def __init__(self, master, groups, columns=2, readonly=()):
         super().__init__(master, padding=12)
         self.fields = [(f[0], f[1]) for _, fields in groups for f in fields]
         self.vars = {}
@@ -95,7 +116,9 @@ class FieldGrid(ttk.Frame):
                          font=("Segoe UI Symbol", 12)).grid(row=row, column=col, padx=(8 if col else 0, 6))
                 ttk.Label(box, text=label).grid(row=row, column=col + 1, sticky="w", padx=(0, 10), pady=2)
                 var = tk.StringVar()
-                ttk.Entry(box, textvariable=var, width=12, font=("Segoe UI Semibold", 11)).grid(row=row, column=col + 2, sticky="e", pady=2)
+                state = "readonly" if key in readonly else "normal"
+                ttk.Entry(box, textvariable=var, width=12, font=("Segoe UI Semibold", 11),
+                          state=state).grid(row=row, column=col + 2, sticky="e", pady=2)
                 self.vars[key] = var
         for c in range(columns):
             self.columnconfigure(c, weight=1)
@@ -126,6 +149,54 @@ class FieldGrid(ttk.Frame):
                     raise ValueError(f"{label} : '{value}' is not a whole number")
             if value != old:
                 pdict.set(key, value)
+
+
+class RewardPanel(ttk.Frame):
+    """Adds an opened chest holding the chosen rewards."""
+
+    def __init__(self, master, on_add):
+        super().__init__(master, padding=16)
+        ttk.Label(self, wraplength=820, justify="left", text=(
+            "Since 2.2, Geometry Dash rebuilds orbs, diamonds, shards and keys from the chests you opened "
+            "every time it starts. To get more, add an extra opened chest holding the amounts below, then Save."
+        )).grid(row=0, column=0, columnspan=8, sticky="w", pady=(0, 12))
+        self.vars = {}
+        self.totals = {}
+        per = -(-len(REWARDS) // 2)
+        for n, (rtype, label, glyph, color) in enumerate(REWARDS):
+            row, col = n % per + 2, (n // per) * 4
+            tk.Label(self, text=glyph, fg=color, bg=theme.PANEL,
+                     font=("Segoe UI Symbol", 12)).grid(row=row, column=col, padx=(24 if col else 0, 6))
+            ttk.Label(self, text=label).grid(row=row, column=col + 1, sticky="w", padx=(0, 10), pady=3)
+            total = ttk.Label(self, style="Value.TLabel", width=12)
+            total.grid(row=row, column=col + 2, sticky="w")
+            var = tk.StringVar()
+            ttk.Entry(self, textvariable=var, width=10, font=("Segoe UI Semibold", 11)).grid(row=row, column=col + 3, pady=3)
+            self.vars[rtype] = var
+            self.totals[rtype] = total
+        for col in (2, 6):
+            ttk.Label(self, text="From chests", style="Value.TLabel").grid(row=1, column=col, sticky="w")
+            ttk.Label(self, text="Add", style="Value.TLabel").grid(row=1, column=col + 1)
+        ttk.Button(self, text="Add chest", command=on_add).grid(row=per + 2, column=0, columnspan=8, sticky="e", pady=(16, 0))
+
+    def load(self, totals):
+        for rtype, label in self.totals.items():
+            label.configure(text=str(totals.get(rtype, 0)))
+
+    def read(self):
+        rewards = {}
+        for rtype, label, _, _ in REWARDS:
+            value = self.vars[rtype].get().strip()
+            if not value:
+                continue
+            if not value.isdigit():
+                raise ValueError(f"{label}: '{value}' is not a positive whole number")
+            rewards[rtype] = int(value)
+        return rewards
+
+    def clear(self):
+        for var in self.vars.values():
+            var.set("")
 
 
 class KeyTable(ttk.Frame):
@@ -292,8 +363,11 @@ class App(tk.Tk):
         self.tabs.pack(fill="both", expand=True, padx=6, pady=6)
         self.tabs.bind("<<NotebookTabChanged>>", lambda _e: self.sync_fields())
 
-        self.stats = FieldGrid(self.tabs, STATS, columns=2)
+        self.stats = FieldGrid(self.tabs, STATS, columns=2, readonly=COMPUTED)
         self.tabs.add(self.stats, text="Stats")
+
+        self.rewards = RewardPanel(self.tabs, on_add=self.add_chest)
+        self.tabs.add(self.rewards, text="Rewards")
 
         self.player = FieldGrid(self.tabs, PLAYER, columns=3)
         self.tabs.add(self.player, text="Player")
@@ -337,6 +411,7 @@ class App(tk.Tk):
         self.player.load(data)
         self.values_table.load(gs)
         self.root_table.load(data)
+        self.rewards.load(gdsave.chest_totals(self.save))
 
     def has_changes(self):
         if self.save is None:
@@ -457,6 +532,23 @@ class App(tk.Tk):
             with open(backup, "rb") as src, open(self.save.path, "wb") as dst:
                 dst.write(src.read())
             self.load(self.save.path)
+
+    def add_chest(self):
+        if not self.check_open() or not self.sync_fields():
+            return
+        try:
+            rewards = self.rewards.read()
+        except ValueError as e:
+            messagebox.showerror(APP_NAME, str(e))
+            return
+        if not rewards:
+            messagebox.showinfo(APP_NAME, "Enter at least one amount to add.")
+            return
+        key = gdsave.add_chest(self.save, rewards)
+        self.dirty = True
+        self.rewards.clear()
+        self.refresh_all()
+        self.status.set(f"Chest {key} added (not saved yet)")
 
     def on_table_change(self):
         self.dirty = True

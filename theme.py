@@ -44,7 +44,8 @@ def apply(root):
 
     style.configure("TEntry", fieldbackground=FIELD, foreground=YELLOW, insertcolor=TEXT,
                     bordercolor=OUTLINE, lightcolor=FIELD, darkcolor=FIELD, padding=4)
-    style.map("TEntry", bordercolor=[("focus", YELLOW)], lightcolor=[("focus", YELLOW)])
+    style.map("TEntry", bordercolor=[("focus", YELLOW)], lightcolor=[("focus", YELLOW)],
+              fieldbackground=[("readonly", PANEL)], foreground=[("readonly", MUTED)])
 
     for name, color, hi in (("TButton", GREEN, GREEN_HI), ("Save.TButton", YELLOW, YELLOW_HI)):
         style.configure(name, background=color, foreground=OUTLINE, font=(title_font, 10),
