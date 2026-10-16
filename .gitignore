@@ -4,3 +4,4 @@ dist/
 __pycache__/
 *.dat
 *.bak
+dist_en/
