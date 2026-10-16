@@ -99,9 +99,15 @@ class PlistDict:
         return PlistDict(v)
 
 
+def file_stamp(path):
+    st = os.stat(path)
+    return st.st_mtime_ns, st.st_size
+
+
 class SaveFile:
     def __init__(self, path):
         self.path = path
+        self.stamp = file_stamp(path)
         xml = read_xml(path)
         self.root = ET.fromstring(xml)
         self.data = PlistDict(self.root.find("dict"))
@@ -114,6 +120,13 @@ class SaveFile:
         self.root = ET.fromstring(xml)
         self.data = PlistDict(self.root.find("dict"))
 
+    def disk_changed(self):
+        """True if something (usually the game) rewrote the file since it was read."""
+        try:
+            return file_stamp(self.path) != self.stamp
+        except OSError:
+            return False
+
     def save(self, path=None):
         path = path or self.path
         if os.path.exists(path):
@@ -121,6 +134,8 @@ class SaveFile:
             with open(path, "rb") as src, open(backup, "wb") as dst:
                 dst.write(src.read())
         write_xml(path, self.to_xml())
+        if path == self.path:
+            self.stamp = file_stamp(path)
 
 
 # Reward types used in chests (GJRewardObject key 1)

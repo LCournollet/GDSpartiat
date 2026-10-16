@@ -137,6 +137,7 @@ class FieldGrid(ttk.Frame):
         return False
 
     def apply(self, pdict, numeric=True):
+        changes = []
         for key, label in self.fields:
             value = self.vars[key].get().strip()
             old = pdict.get(key)
@@ -149,6 +150,8 @@ class FieldGrid(ttk.Frame):
                     raise ValueError(f"{label} : '{value}' is not a whole number")
             if value != old:
                 pdict.set(key, value)
+                changes.append((key, value))
+        return changes
 
 
 class RewardPanel(ttk.Frame):
@@ -202,10 +205,11 @@ class RewardPanel(ttk.Frame):
 class KeyTable(ttk.Frame):
     """Editable table of every simple value in a dictionary."""
 
-    def __init__(self, master, on_change=None, before_change=None):
+    def __init__(self, master, path=None, on_change=None, before_change=None):
         super().__init__(master, padding=10)
         self.pdict = None
-        self.on_change = on_change or (lambda: None)
+        self.path = path
+        self.on_change = on_change or (lambda *_: None)
         self.before_change = before_change or (lambda: True)
         bar = ttk.Frame(self)
         bar.pack(fill="x", pady=(0, 6))
@@ -261,7 +265,7 @@ class KeyTable(ttk.Frame):
         if value is not None and self.before_change():
             self.pdict.set(key, value)
             self.refresh()
-            self.on_change()
+            self.on_change(self.path, key, value)
 
     def add_key(self):
         if self.pdict is None:
@@ -274,7 +278,7 @@ class KeyTable(ttk.Frame):
             return
         self.pdict.set(key, value)
         self.refresh()
-        self.on_change()
+        self.on_change(self.path, key, value)
 
 
 
@@ -329,7 +333,8 @@ class App(tk.Tk):
         self.geometry("960x740")
         self.minsize(700, 450)
         self.save = None
-        self.dirty = False
+        # Edits made since the file was read, replayed on a fresh copy if the game rewrote it
+        self.ops = []
 
         menu = tk.Menu(self)
         fmenu = tk.Menu(menu, tearoff=0)
@@ -372,11 +377,13 @@ class App(tk.Tk):
         self.player = FieldGrid(self.tabs, PLAYER, columns=3)
         self.tabs.add(self.player, text="Player")
 
-        self.values_table = KeyTable(self.tabs, on_change=self.on_table_change, before_change=self.sync_fields)
+        self.values_table = KeyTable(self.tabs, path="GS_value", on_change=self.on_table_change, before_change=self.sync_fields)
         self.tabs.add(self.values_table, text="All stats (GS_value)")
 
         self.root_table = KeyTable(self.tabs, on_change=self.on_table_change, before_change=self.sync_fields)
         self.tabs.add(self.root_table, text="Settings and misc")
+
+        self.bind("<FocusIn>", self.on_focus)
 
         if autoload:
             self.after(100, self.open_default)
@@ -389,7 +396,7 @@ class App(tk.Tk):
         except Exception as e:
             messagebox.showerror(APP_NAME, f"Could not read {path}\n\n{e}")
             return
-        self.dirty = False
+        self.ops = []
         self.refresh_all()
         self.status.set(path)
         if gd_is_running():
@@ -417,7 +424,7 @@ class App(tk.Tk):
         if self.save is None:
             return False
         data = self.save.data
-        return self.dirty or self.stats.changed(data.get("GS_value")) or self.player.changed(data)
+        return bool(self.ops) or self.stats.changed(data.get("GS_value")) or self.player.changed(data)
 
     def open_default(self):
         path = os.path.join(gdsave.default_save_dir(), "CCGameManager.dat")
@@ -447,11 +454,11 @@ class App(tk.Tk):
         data = self.save.data
         try:
             if self.stats.changed(data.get("GS_value")):
-                self.stats.apply(data.ensure_dict("GS_value"))
-                self.dirty = True
+                for key, value in self.stats.apply(data.ensure_dict("GS_value")):
+                    self.ops.append(("set", "GS_value", key, value))
             if self.player.changed(data):
-                self.player.apply(data)
-                self.dirty = True
+                for key, value in self.player.apply(data):
+                    self.ops.append(("set", None, key, value))
         except ValueError as e:
             messagebox.showerror(APP_NAME, str(e))
             return False
@@ -478,6 +485,8 @@ class App(tk.Tk):
         ):
             return False
         target = path or self.save.path
+        if target == self.save.path and self.save.disk_changed() and not self.merge_with_disk():
+            return False
         try:
             self.save.save(path)
             if gdsave.SaveFile(target).to_xml() != self.save.to_xml():
@@ -485,7 +494,7 @@ class App(tk.Tk):
         except Exception as e:
             messagebox.showerror(APP_NAME, f"Save failed\n\n{e}")
             return False
-        self.dirty = False
+        self.ops = []
         self.status.set(f"Saved and verified: {target} (previous file copied to .bak)")
         return True
 
@@ -517,7 +526,7 @@ class App(tk.Tk):
         except Exception as e:
             messagebox.showerror(APP_NAME, f"Invalid XML\n\n{e}")
             return
-        self.dirty = True
+        self.ops.append(("xml",))
         self.refresh_all()
         self.status.set(f"XML imported from {path} (not saved yet)")
 
@@ -545,13 +554,44 @@ class App(tk.Tk):
             messagebox.showinfo(APP_NAME, "Enter at least one amount to add.")
             return
         key = gdsave.add_chest(self.save, rewards)
-        self.dirty = True
+        self.ops.append(("chest", rewards))
         self.rewards.clear()
         self.refresh_all()
         self.status.set(f"Chest {key} added (not saved yet)")
 
-    def on_table_change(self):
-        self.dirty = True
+    def merge_with_disk(self):
+        """The game rewrote the file since it was opened: reload it and apply our edits on top."""
+        if any(op[0] == "xml" for op in self.ops):
+            return messagebox.askyesno(
+                APP_NAME,
+                "The game changed the save since you opened it.\n\n"
+                "Saving the imported XML will undo that progress. Save anyway?",
+            )
+        try:
+            fresh = gdsave.SaveFile(self.save.path)
+        except Exception as e:
+            messagebox.showerror(APP_NAME, f"Could not read {self.save.path}\n\n{e}")
+            return False
+        for op in self.ops:
+            if op[0] == "set":
+                target = fresh.data if op[1] is None else fresh.data.ensure_dict(op[1])
+                target.set(op[2], op[3])
+            elif op[0] == "chest":
+                gdsave.add_chest(fresh, op[1])
+        self.save = fresh
+        self.refresh_all()
+        return True
+
+    def on_focus(self, event):
+        # Pick up what the game wrote while the app was in the background
+        if event.widget is not self or self.save is None or not self.save.disk_changed():
+            return
+        if not self.has_changes():
+            self.load(self.save.path)
+            self.status.set("Save reloaded: the game changed it since it was opened")
+
+    def on_table_change(self, path, key, value):
+        self.ops.append(("set", path, key, value))
         self.refresh_all()
         self.status.set("Modified (not saved yet)")
 
