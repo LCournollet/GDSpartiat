@@ -1,6 +1,7 @@
+import ctypes
 import os
-import subprocess
 import tkinter as tk
+from ctypes import wintypes
 from tkinter import ttk, filedialog, messagebox, simpledialog
 
 import gdsave
@@ -206,15 +207,47 @@ class KeyTable(ttk.Frame):
 
 
 
-def gd_is_running():
+class PROCESSENTRY32W(ctypes.Structure):
+    _fields_ = [
+        ("dwSize", wintypes.DWORD),
+        ("cntUsage", wintypes.DWORD),
+        ("th32ProcessID", wintypes.DWORD),
+        ("th32DefaultHeapID", ctypes.c_size_t),
+        ("th32ModuleID", wintypes.DWORD),
+        ("cntThreads", wintypes.DWORD),
+        ("th32ParentProcessID", wintypes.DWORD),
+        ("pcPriClassBase", ctypes.c_long),
+        ("dwFlags", wintypes.DWORD),
+        ("szExeFile", ctypes.c_wchar * 260),
+    ]
+
+
+def running_processes():
+    """Names of running processes, read through the Windows API (no console spawned)."""
+    kernel32 = ctypes.windll.kernel32
+    kernel32.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+    snap = kernel32.CreateToolhelp32Snapshot(0x2, 0)
+    if not snap or snap == wintypes.HANDLE(-1).value:
+        raise OSError("CreateToolhelp32Snapshot failed")
+    names = set()
+    entry = PROCESSENTRY32W()
+    entry.dwSize = ctypes.sizeof(entry)
     try:
-        out = subprocess.run(
-            ["tasklist", "/FI", "IMAGENAME eq GeometryDash.exe", "/NH"],
-            capture_output=True, text=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-        ).stdout
-    except OSError:
-        return False
-    return "geometrydash.exe" in out.lower()
+        ok = kernel32.Process32FirstW(snap, ctypes.byref(entry))
+        while ok:
+            names.add(entry.szExeFile.lower())
+            ok = kernel32.Process32NextW(snap, ctypes.byref(entry))
+    finally:
+        kernel32.CloseHandle(snap)
+    return names
+
+
+def gd_is_running():
+    """True if the game is running, None if it cannot be determined."""
+    try:
+        return "geometrydash.exe" in running_processes()
+    except Exception:
+        return None
 
 
 class App(tk.Tk):
@@ -285,6 +318,13 @@ class App(tk.Tk):
         self.dirty = False
         self.refresh_all()
         self.status.set(path)
+        if gd_is_running():
+            self.status.set("Geometry Dash is running: close it before saving, or your changes will be lost")
+            messagebox.showwarning(
+                APP_NAME,
+                "Geometry Dash is running.\n\n"
+                "Close the game first: it overwrites the save when it exits.",
+            )
 
     def reload(self):
         if self.save is not None:
@@ -348,12 +388,19 @@ class App(tk.Tk):
             return False
         if not self.sync_fields():
             return False
-        if gd_is_running():
+        running = gd_is_running()
+        if running:
             messagebox.showwarning(
                 APP_NAME,
                 "Geometry Dash is running and will overwrite the save when it closes.\n\n"
                 "Close the game, then save again.",
             )
+            return False
+        if running is None and not messagebox.askyesno(
+            APP_NAME,
+            "Could not check whether Geometry Dash is running.\n\n"
+            "Make sure the game is closed. Save now?",
+        ):
             return False
         target = path or self.save.path
         try:
